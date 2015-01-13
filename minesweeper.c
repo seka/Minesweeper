@@ -8,15 +8,19 @@
 #define MAX_BOMB  (5)
 
 #define BOMB      (-1)
+
 #define SPACE     (0)
 #define OPENED    (1)
+
+#define TRUE      (1)
+#define FALSE     (0)
 
 void init_game(int ***map, char ***map_p);
 void end_game(int ***map, char ***map_p);
 void set_bomb(int **map);
 int open(unsigned int x, unsigned int y);
 int is_bomb(unsigned int x, unsigned int y);
-int is_clear(void);
+int is_clear(int ***map);
 void display_state(int **map);
 
 int main(void)
@@ -26,7 +30,10 @@ int main(void)
 
     init_game(&map, &map_p);
 
-    display_state(map);
+    /*
+    while (is_clear(&map) != TRUE){
+    }
+    */
 
     end_game(&map, &map_p);
 
@@ -80,6 +87,23 @@ void set_bomb(int **map)
     }
 }
 
+int is_clear(int ***map)
+{
+    int i;
+    int j;
+
+    for (i = COL - 1; 0 <= i; i--){
+        for (j = ROW - 1; 0 <= j; j--){
+            if (map[i][j] == SPACE){
+                return (FALSE);
+            }
+        }
+    }
+
+    return (TRUE);
+}
+
+/* デバッグ用関数 */
 void display_state(int **map)
 {
     for (int i = 0; i < COL; i++){
