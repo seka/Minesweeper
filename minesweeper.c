@@ -15,25 +15,33 @@
 #define TRUE      (1)
 #define FALSE     (0)
 
-void init_game(int ***map, char ***map_p);
-void end_game(int ***map, char ***map_p);
-void set_bomb(int **map);
-int open(unsigned int x, unsigned int y);
-int is_bomb(unsigned int x, unsigned int y);
-int is_clear(int ***map);
-void display_state(int **map);
+void init_game     (int ***map, char ***map_p);
+void end_game      (int ***map, char ***map_p);
+void set_bomb      (int **map);
+void open_map      (int ***map, unsigned int x, unsigned int y);
+int  is_bomb       (unsigned int x, unsigned int y);
+int  is_clear      (int **map);
+void display_state (int **map);
 
 int main(void)
 {
     int **map;
     char **map_p;
 
+    char c1, c2;
+    unsigned int selected_x;
+    unsigned int selected_y;
+
     init_game(&map, &map_p);
 
-    /*
-    while (is_clear(&map) != TRUE){
+    while (is_clear(map) != TRUE){
+        display_state(map);
+
+        printf("opend(x, y):");
+        scanf(" %d %d", &selected_x, &selected_y);
+
+        open_map(&map, selected_x, selected_y);
     }
-    */
 
     end_game(&map, &map_p);
 
@@ -87,7 +95,7 @@ void set_bomb(int **map)
     }
 }
 
-int is_clear(int ***map)
+int is_clear(int **map)
 {
     int i;
     int j;
@@ -101,6 +109,16 @@ int is_clear(int ***map)
     }
 
     return (TRUE);
+}
+
+void open_map(int ***map, unsigned int x, unsigned int y)
+{
+    if ((*map)[y][x] == BOMB){
+        printf("爆弾です!");
+        exit(1);
+    }
+
+    (*map)[y][x] = OPENED;
 }
 
 /* デバッグ用関数 */
