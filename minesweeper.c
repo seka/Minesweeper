@@ -7,10 +7,11 @@
 #define ROW       (5)
 #define MAX_BOMB  (5)
 
-#define BOMB      (-1)
+#define VISUAL_UNOPEN ('?')
+#define VISUAL_BOMB   ('x')
 
-#define SPACE     (0)
-#define OPENED    (1)
+#define BOMB      (-1)
+#define OPENED    (10)
 
 #define TRUE      (1)
 #define FALSE     (0)
@@ -18,17 +19,20 @@
 void init_game         (int ***map, char ***map_p);
 void end_game          (int ***map, char ***map_p);
 void set_bomb          (int **map);
+void init_board        (char **map_p);
 void increment_around  (int **map, int x, int y);
 int  check_limit       (int limit, int n);
-void open_map          (int ***map, unsigned int x, unsigned int y);
+int  open_map          (int **map, char **map_p, unsigned int x, unsigned int y);
 int  is_bomb           (int **map, int x, int y);
 int  is_clear          (int **map);
+void show_map          (char **map);
 void display_state     (int **map);
 
 int main(void)
 {
     int **map;
     char **map_p;
+    int flag;
 
     char c1, c2;
     unsigned int selected_x;
@@ -37,13 +41,18 @@ int main(void)
     init_game(&map, &map_p);
 
     while (is_clear(map) != TRUE){
-        display_state(map);
+        show_map(map_p);
 
         printf("opend(x, y):");
         scanf(" %d %d", &selected_x, &selected_y);
 
-        open_map(&map, selected_x, selected_y);
+        flag = open_map(map, map_p, selected_x, selected_y);
+        if (flag == FALSE){
+            break;
+        }
     }
+
+    display_state(map);
 
     end_game(&map, &map_p);
 
@@ -61,10 +70,24 @@ void init_game(int ***map, char ***map_p)
 
     for (i = COL - 1; 0 <= i; i--){
         *(*map + i)   = (int  *)calloc(ROW, sizeof(int));
-        *(*map_p + i) = (char *)calloc(ROW, sizeof(char) + 1);
+        *(*map_p + i) = (char *)calloc(ROW + 1, sizeof(char));
     }
 
+    init_board(*map_p);
     set_bomb(*map);
+}
+
+void init_board(char **map)
+{
+    int i;
+    int j;
+
+    for (i = 0; i < COL; i++){
+        for (j = 0; j < ROW; j++){
+            map[i][j] = VISUAL_UNOPEN;
+        }
+        map[i][j] = '\0';
+    }
 }
 
 void end_game(int ***map, char ***map_p)
@@ -159,7 +182,7 @@ int is_clear(int **map)
 
     for (i = COL - 1; 0 <= i; i--){
         for (j = ROW - 1; 0 <= j; j--){
-            if (map[i][j] == SPACE){
+            if (map[i][j] != OPENED && map[i][j] != BOMB){
                 return (FALSE);
             }
         }
@@ -168,14 +191,34 @@ int is_clear(int **map)
     return (TRUE);
 }
 
-void open_map(int ***map, unsigned int x, unsigned int y)
+int open_map(int **map, char **map_p, unsigned int x, unsigned int y)
 {
-    if ((*map)[y][x] == BOMB){
-        printf("爆弾です!");
-        exit(1);
+    if (map[y][x] == OPENED){
+        return (TRUE);
     }
 
-    (*map)[y][x] = OPENED;
+    if (is_bomb(map, x, y) == TRUE){
+        puts("爆弾です!");
+        return (FALSE);
+    }
+
+    map_p[y][x] = map[y][x] + '0';
+    map[y][x] = OPENED;
+
+    return (TRUE);
+}
+
+void show_map(char **map)
+{
+    int i;
+    int j;
+
+    for (i = 0; i < COL; i++){
+        for (j = 0; j < ROW; j++){
+            printf("%4c", map[i][j]);
+        }
+        puts("");
+    }
 }
 
 /* デバッグ用関数 */
