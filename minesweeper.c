@@ -9,9 +9,12 @@
 
 #define VISUAL_UNOPEN ('?')
 #define VISUAL_BOMB   ('x')
+#define VISUAL_FLAG   ('f')
+
 
 #define BOMB      (-1)
 #define OPENED    (10)
+#define FLAG      (11)
 
 #define TRUE      (1)
 #define FALSE     (0)
