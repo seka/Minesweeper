@@ -68,9 +68,19 @@ void init_game(int ***map, char ***map_p)
     *map   = (int **) calloc(COL, sizeof(char *));
     *map_p = (char **)calloc(COL, sizeof(int *));
 
+    if (*map == NULL || *map_p == NULL){
+        puts("メモリの確保に失敗しました");
+        exit(1);
+    }
+
     for (i = COL - 1; 0 <= i; i--){
         *(*map + i)   = (int  *)calloc(ROW, sizeof(int));
         *(*map_p + i) = (char *)calloc(ROW + 1, sizeof(char));
+
+        if (*map == NULL || *map_p == NULL){
+            puts("メモリの確保に失敗しました");
+            exit(1);
+        }
     }
 
     init_board(*map_p);
