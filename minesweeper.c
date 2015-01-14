@@ -15,13 +15,15 @@
 #define TRUE      (1)
 #define FALSE     (0)
 
-void init_game     (int ***map, char ***map_p);
-void end_game      (int ***map, char ***map_p);
-void set_bomb      (int **map);
-void open_map      (int ***map, unsigned int x, unsigned int y);
-int  is_bomb       (unsigned int x, unsigned int y);
-int  is_clear      (int **map);
-void display_state (int **map);
+void init_game         (int ***map, char ***map_p);
+void end_game          (int ***map, char ***map_p);
+void set_bomb          (int **map);
+void increment_around  (int **map, int x, int y);
+int  check_limit       (int limit, int n);
+void open_map          (int ***map, unsigned int x, unsigned int y);
+int  is_bomb           (int **map, int x, int y);
+int  is_clear          (int **map);
+void display_state     (int **map);
 
 int main(void)
 {
@@ -88,11 +90,66 @@ void set_bomb(int **map)
     count = 0;
     while (count < MAX_BOMB){
         rand_num = rand() % (COL * ROW);
+
         if (map[rand_num / ROW][rand_num % ROW] != BOMB){
             map[rand_num / ROW][rand_num % ROW] = BOMB;
+            increment_around(map, rand_num % ROW, rand_num / ROW);
             count++;
         }
     }
+}
+
+void increment_around(int **map, int x, int y)
+{
+    if (check_limit(COL, y - 1) == TRUE && check_limit(ROW, x - 1) == TRUE && is_bomb(map, x - 1, y - 1) == FALSE){
+        map[y - 1][x - 1]++;
+    }
+
+    if (check_limit(COL, y - 1) == TRUE && is_bomb(map, x, y - 1) == FALSE){
+        map[y - 1][x]++;
+    }
+
+    if (check_limit(COL, y - 1) == TRUE && check_limit(ROW, x + 1) == TRUE && is_bomb(map, x + 1, y - 1) == FALSE){
+        map[y - 1][x + 1]++;
+    }
+
+    if (check_limit(ROW, x - 1) == TRUE && is_bomb(map, x - 1, y) == FALSE){
+        map[y][x - 1]++;
+    }
+
+    if (check_limit(ROW, x + 1) == TRUE && is_bomb(map, x + 1, y) == FALSE){
+        map[y][x + 1]++;
+    }
+
+    if (check_limit(COL, y + 1) == TRUE && check_limit(ROW, x - 1) == TRUE && is_bomb(map, x - 1, y + 1) == FALSE){
+        map[y + 1][x - 1]++;
+    }
+
+    if (check_limit(COL, y + 1) == TRUE && is_bomb(map, x, y + 1) == FALSE){
+        map[y + 1][x]++;
+    }
+
+    if (check_limit(COL, y + 1) == TRUE && check_limit(ROW, x + 1) == TRUE && is_bomb(map, x + 1, y + 1) == FALSE){
+        map[y + 1][x + 1]++;
+    }
+}
+
+int check_limit(int limit, int n)
+{
+    if (0 <= n && n < limit){
+        return (TRUE);
+    }
+
+    return (FALSE);
+}
+
+int is_bomb(int **map, int x, int y)
+{
+    if (map[y][x] == BOMB){
+        return (TRUE);
+    }
+
+    return (FALSE);
 }
 
 int is_clear(int **map)
