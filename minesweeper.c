@@ -35,8 +35,8 @@ int main(void)
     int flag;
 
     char c1, c2;
-    unsigned int selected_x;
-    unsigned int selected_y;
+    int selected_x;
+    int selected_y;
 
     init_game(&map, &map_p);
 
@@ -45,6 +45,10 @@ int main(void)
 
         printf("opend(x, y):");
         scanf(" %d %d", &selected_x, &selected_y);
+        if (selected_x < 0  && ROW < selected_x && selected_y < 0 && COL < selected_y){
+            puts("範囲外の数値が入力されました");
+            continue;
+        }
 
         flag = open_map(map, map_p, selected_x, selected_y);
         if (flag == FALSE){
