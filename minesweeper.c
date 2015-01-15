@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 
 #define COL       (5)
 #define ROW       (5)
@@ -17,17 +18,18 @@
 #define TRUE      (1)
 #define FALSE     (0)
 
-void end_game          (int ***map, char ***map_p);
-void increment_around  (int **map, int x, int y);
-void init_board        (char **map_p);
-void init_game         (int ***map, char ***map_p);
-int  is_bomb           (int **map, int x, int y);
-int  is_clear          (int **map);
-int  is_limit          (int limit, int n);
-int  open_cell         (int **map, char **map_p, unsigned int x, unsigned int y);
-void switch_flag          (char **map_p, unsigned int x, unsigned int y);
-void set_bomb          (int **map);
-void show_map          (char **map);
+void end_game           (int ***map, char ***map_p);
+void increment_around   (int **map, int x, int y);
+void init_board         (char **map_p);
+void init_game          (int ***map, char ***map_p);
+void input_definision   (int *num, char *str);
+int  is_bomb            (int **map, int x, int y);
+int  is_clear           (int **map);
+int  is_limit           (int limit, int n);
+int  open_cell          (int **map, char **map_p, unsigned int x, unsigned int y);
+void switch_flag        (char **map_p, unsigned int x, unsigned int y);
+void set_bomb           (int **map);
+void show_map           (char **map);
 
 // デバッグ用関数
 void display_state     (int **map);
@@ -44,6 +46,8 @@ int main(void)
     int flag = TRUE;
 
     init_game(&map, &map_p);
+
+    display_state(map);
 
     while (is_clear(map) != TRUE && flag == TRUE){
         show_map(map_p);
@@ -77,6 +81,22 @@ int main(void)
     end_game(&map, &map_p);
 
     return (0);
+}
+
+void input_definision(int *num, char *str)
+{
+    int x = 0;
+
+    while (x == 0){
+        printf("%sの設定:\n", str);
+        scanf(" %d", &x);
+        *num = x;
+
+        if (x <= 0 && x > 16384){
+            puts("範囲外の整数が入力されました");
+            x = 0;
+        }
+    }
 }
 
 void init_game(int ***map, char ***map_p)
