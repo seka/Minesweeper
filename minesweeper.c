@@ -25,7 +25,7 @@ int  is_bomb           (int **map, int x, int y);
 int  is_clear          (int **map);
 int  is_limit          (int limit, int n);
 int  open_cell         (int **map, char **map_p, unsigned int x, unsigned int y);
-int  put_flag          (char **map_p, unsigned int x, unsigned int y);
+void put_flag          (char **map_p, unsigned int x, unsigned int y);
 void set_bomb          (int **map);
 void show_map          (char **map);
 
@@ -36,11 +36,12 @@ int main(void)
 {
     int **map;
     char **map_p;
-    int flag = TRUE;
 
-    char c1, c2;
+    char c1, c2, c3;
     int selected_x;
     int selected_y;
+
+    int flag = TRUE;
 
     init_game(&map, &map_p);
 
@@ -57,8 +58,6 @@ int main(void)
             puts("範囲外の数値が入力されました");
             continue;
         }
-
-        flag = open_cell(map, map_p, selected_x, selected_y);
     }
 
     show_map(map_p);
@@ -208,6 +207,10 @@ int is_clear(int **map)
 
 int open_cell(int **map, char **map_p, unsigned int x, unsigned int y)
 {
+    if (map_p[y][x] == VISUAL_FLAG){
+        return (TRUE);
+    }
+
     if (is_bomb(map, x, y) == TRUE){
         puts("爆弾です!");
         map_p[y][x] = 'x';
@@ -242,17 +245,14 @@ void show_map(char **map)
     }
 }
 
-int put_flag(char **map_p, unsigned int x, unsigned int y)
+void put_flag(char **map_p, unsigned int x, unsigned int y)
 {
-    if (map_p[y][x] != VISUAL_FLAG){
-        map_p[y][x] = 'F';
+    if (map_p[y][x] == '?' && map_p[y][x] != VISUAL_FLAG){
+        map_p[y][x] = VISUAL_FLAG;
+        return;
     }
 
-    if (map_p[y][x] == VISUAL_FLAG){
-        map_p[y][x] = '?';
-    }
-
-    return (TRUE);
+    map_p[y][x] = '?';
 }
 
 /* デバッグ用関数 */
