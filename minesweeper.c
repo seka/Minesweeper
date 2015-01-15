@@ -20,9 +20,9 @@
 #define MAX_BOMB  (5)
 */
 
-unsigned int g_col;
-unsigned int g_row;
-unsigned int g_max_bomb;
+int g_col;
+int g_row;
+int g_max_bomb;
 
 void end_game           (int ***map, char ***map_p);
 void increment_around   (int **map, int x, int y);
@@ -51,9 +51,11 @@ int main(void)
 
     int flag = TRUE;
 
-    init_game(&map, &map_p);
+    input_definision(&g_col, "マップの縦の長さ");
+    input_definision(&g_row, "マップの横の長さ");
+    input_definision(&g_max_bomb, "爆弾の数");
 
-    display_state(map);
+    init_game(&map, &map_p);
 
     while (is_clear(map) != TRUE && flag == TRUE){
         show_map(map_p);
@@ -94,7 +96,7 @@ void input_definision(int *num, char *str)
     int x = 0;
 
     while (x == 0){
-        printf("%sの設定:\n", str);
+        printf("%sの設定:", str);
         scanf(" %d", &x);
         *num = x;
 
