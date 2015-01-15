@@ -14,12 +14,6 @@
 #define TRUE      (1)
 #define FALSE     (0)
 
-/*
-#define COL       (5)
-#define ROW       (5)
-#define MAX_BOMB  (5)
-*/
-
 int g_col;
 int g_row;
 int g_max_bomb;
