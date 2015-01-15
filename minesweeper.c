@@ -226,7 +226,7 @@ int open_cell(int **map, char **map_p, unsigned int x, unsigned int y)
 
     if (is_bomb(map, x, y) == TRUE){
         puts("爆弾です!");
-        map_p[y][x] = 'x';
+        map_p[y][x] = VISUAL_BOMB;
         return (FALSE);
     }
 
@@ -260,12 +260,12 @@ void show_map(char **map)
 
 void put_flag(char **map_p, unsigned int x, unsigned int y)
 {
-    if (map_p[y][x] == '?' && map_p[y][x] != VISUAL_FLAG){
+    if (map_p[y][x] == VISUAL_UNOPEN && map_p[y][x] != VISUAL_FLAG){
         map_p[y][x] = VISUAL_FLAG;
         return;
     }
 
-    map_p[y][x] = '?';
+    map_p[y][x] = VISUAL_UNOPEN;
 }
 
 /* デバッグ用関数 */
