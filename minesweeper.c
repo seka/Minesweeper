@@ -27,6 +27,7 @@ int  is_bomb           (int **map, int x, int y);
 int  is_clear          (int **map);
 int  is_limit          (int limit, int n);
 int  open_cell         (int **map, char **map_p, unsigned int x, unsigned int y);
+int  put_flag          (char **map_p, unsigned int x, unsigned int y);
 void set_bomb          (int **map);
 void show_map          (char **map);
 
@@ -153,7 +154,6 @@ void increment_around(int **map, int x, int y)
     if (is_limit(ROW, x - 1) == TRUE && is_bomb(map, x - 1, y) == FALSE){
         map[y][x - 1]++;
     }
-
     if (is_limit(ROW, x + 1) == TRUE && is_bomb(map, x + 1, y) == FALSE){
         map[y][x + 1]++;
     }
@@ -242,6 +242,19 @@ void show_map(char **map)
         }
         puts("");
     }
+}
+
+int put_flag(char **map_p, unsigned int x, unsigned int y)
+{
+    if (map_p[y][x] != FLAG){
+        map_p[y][x] = 'f';
+    }
+
+    if (map_p[y][x] == FLAG){
+        map_p[y][x] = '?';
+    }
+
+    return (TRUE);
 }
 
 /* デバッグ用関数 */
