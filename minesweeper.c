@@ -58,6 +58,19 @@ int main(void)
             puts("範囲外の数値が入力されました");
             continue;
         }
+
+        printf("(f)lag or (o)pen and press to Enter:");
+        scanf(" %c", &c3);
+
+        if (c3 == 'f'){
+            put_flag(map_p, selected_x, selected_y);
+        }
+        else if (c3 == 'o'){
+            flag = open_cell(map, map_p, selected_x, selected_y);
+        }
+        else {
+            puts("f と o 以外の数値が入力されました");
+        }
     }
 
     show_map(map_p);
