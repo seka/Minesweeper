@@ -25,7 +25,7 @@ int  is_bomb           (int **map, int x, int y);
 int  is_clear          (int **map);
 int  is_limit          (int limit, int n);
 int  open_cell         (int **map, char **map_p, unsigned int x, unsigned int y);
-void put_flag          (char **map_p, unsigned int x, unsigned int y);
+void switch_flag          (char **map_p, unsigned int x, unsigned int y);
 void set_bomb          (int **map);
 void show_map          (char **map);
 
@@ -63,7 +63,7 @@ int main(void)
         scanf(" %c", &c3);
 
         if (c3 == 'f'){
-            put_flag(map_p, selected_x, selected_y);
+            switch_flag(map_p, selected_x, selected_y);
         }
         else if (c3 == 'o'){
             flag = open_cell(map, map_p, selected_x, selected_y);
@@ -258,7 +258,7 @@ void show_map(char **map)
     }
 }
 
-void put_flag(char **map_p, unsigned int x, unsigned int y)
+void switch_flag(char **map_p, unsigned int x, unsigned int y)
 {
     if (map_p[y][x] == VISUAL_UNOPEN && map_p[y][x] != VISUAL_FLAG){
         map_p[y][x] = VISUAL_FLAG;
