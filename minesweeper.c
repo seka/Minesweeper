@@ -11,10 +11,8 @@
 #define VISUAL_BOMB   ('x')
 #define VISUAL_FLAG   ('f')
 
-
 #define BOMB      (-1)
 #define OPENED    (10)
-#define FLAG      (11)
 
 #define TRUE      (1)
 #define FALSE     (0)
@@ -246,11 +244,11 @@ void show_map(char **map)
 
 int put_flag(char **map_p, unsigned int x, unsigned int y)
 {
-    if (map_p[y][x] != FLAG){
-        map_p[y][x] = 'f';
+    if (map_p[y][x] != VISUAL_FLAG){
+        map_p[y][x] = 'F';
     }
 
-    if (map_p[y][x] == FLAG){
+    if (map_p[y][x] == VISUAL_FLAG){
         map_p[y][x] = '?';
     }
 
