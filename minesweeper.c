@@ -10,6 +10,7 @@
 
 #define BOMB      (-1)
 #define OPENED    (10)
+#define SPACE     (0)
 
 #define TRUE      (1)
 #define FALSE     (0)
@@ -27,9 +28,10 @@ int  is_bomb            (int **map, int x, int y);
 int  is_clear           (int **map);
 int  is_limit           (int limit, int n);
 int  open_cell          (int **map, char **map_p, unsigned int x, unsigned int y);
-void switch_flag        (char **map_p, unsigned int x, unsigned int y);
+void open_around        (int **map, char **map_p, int x, int y);
 void set_bomb           (int **map);
 void show_map           (char **map);
+void switch_flag        (char **map_p, unsigned int x, unsigned int y);
 
 // デバッグ用関数
 void display_state     (int **map);
@@ -85,6 +87,7 @@ int main(void)
     return (0);
 }
 
+// TODO: 爆弾はマップの中に入る個数しか入力できないようにするべきでは？
 void input_definision(int *num, char *str)
 {
     int x = 0;
@@ -172,11 +175,9 @@ void increment_around(int **map, int x, int y)
         if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y - 1) == FALSE){
             map[y - 1][x - 1]++;
         }
-
         if (is_bomb(map, x, y - 1) == FALSE){
             map[y - 1][x]++;
         }
-
         if (is_limit(g_row, x + 1) == TRUE && is_bomb(map, x + 1, y - 1) == FALSE){
             map[y - 1][x + 1]++;
         }
@@ -195,11 +196,9 @@ void increment_around(int **map, int x, int y)
         if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y + 1) == FALSE){
             map[y + 1][x - 1]++;
         }
-
         if (is_bomb(map, x, y + 1) == FALSE){
             map[y + 1][x]++;
         }
-
         if (is_limit(g_row, x + 1) == TRUE && is_bomb(map, x + 1, y + 1) == FALSE){
             map[y + 1][x + 1]++;
         }
@@ -253,11 +252,66 @@ int open_cell(int **map, char **map_p, unsigned int x, unsigned int y)
     }
 
     if (map[y][x] != OPENED){
-        map_p[y][x] = map[y][x] + '0';
-        map[y][x] = OPENED;
+        open_around(map, map_p, x, y);
     }
 
     return (TRUE);
+}
+
+void open_around(int **map, char **map_p, int x, int y)
+{
+    int flag = FALSE;
+    static int visited[1000];
+
+    if (visited[y * g_row + x] == TRUE){
+        return;
+    }
+
+    if (map[y][x] != SPACE){
+        flag = TRUE;
+    }
+
+    visited[y * g_row + x] = TRUE;
+    map_p[y][x] = map[y][x] + '0';
+    map[y][x] = OPENED;
+
+    if (flag == TRUE){
+        return;
+    }
+
+    // Cellの上側の探索
+    if (is_limit(g_col, y - 1) == TRUE){
+        if (is_limit(g_row, x - 1) == TRUE && map[y - 1][x - 1] != BOMB){
+            open_around(map, map_p, x - 1, y - 1);
+        }
+        if (is_bomb(map, x, y - 1) != BOMB){
+            open_around(map, map_p, x, y - 1);
+        }
+        if (is_limit(g_row, x + 1) == TRUE && map[y - 1][x + 1] != BOMB){
+            open_around(map, map_p, x + 1, y - 1);
+        }
+    }
+
+    // Cellの左右の探索
+    if (is_limit(g_row, x - 1) == TRUE && map[y][x - 1] != BOMB){
+        open_around(map, map_p, x - 1, y);
+    }
+    if (is_limit(g_row, x + 1) == TRUE && map[y][x + 1] != BOMB){
+        open_around(map, map_p, x + 1, y);
+    }
+
+    // Cellの下側の探索
+    if (is_limit(g_col, y + 1) == TRUE){
+        if (is_limit(g_row, x - 1) == TRUE && map[y + 1][x - 1] != BOMB){
+            open_around(map, map_p, x - 1, y + 1);
+        }
+        if (map[y + 1][x] != BOMB){
+            open_around(map, map_p, x, y + 1);
+        }
+        if (is_limit(g_row, x + 1) == TRUE && map[y + 1][x + 1] != BOMB){
+            open_around(map, map_p, x + 1, y + 1);
+        }
+    }
 }
 
 void show_map(char **map)
@@ -293,7 +347,15 @@ void switch_flag(char **map_p, unsigned int x, unsigned int y)
 /* デバッグ用関数 */
 void display_state(int **map)
 {
+    printf("%3c", ' ');
+
+    for (int i = 0; i < g_row; i++){
+      printf("%5c", 'a' + i);
+    }
+    puts("");
+
     for (int i = 0; i < g_col; i++){
+        printf("%4c", i + '0');
         for (int j = 0; j < g_row; j++){
             printf("%4d ", map[i][j]);
         }
