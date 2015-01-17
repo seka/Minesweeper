@@ -19,13 +19,13 @@ int g_col;
 int g_row;
 int g_max_bomb;
 
-void adapt_around       (int **map, int x, int y, void (*func)(int **map, int x, int y));
 int  check_cell         (int **map, char **vmap, int x, int y);
 void end_game           (int ***map, char ***vmap);
 void increment_around   (int **map, int x, int y);
 void init_vmap          (char **vmap);
 void init_game          (int ***map, char ***vmap);
-void input_definision   (int *num, char *str);
+void input_bomb         (int *num, char *str);
+void input_len          (int *num, char *str);
 int  is_bomb            (int **map, int x, int y);
 int  is_clear           (int **map);
 int  is_limit           (int limit, int n);
@@ -47,13 +47,11 @@ int main(void)
 
     int game_flag = TRUE;
 
-    input_definision(&g_col, "マップの縦の長さ");
-    input_definision(&g_row, "マップの横の長さ");
-    input_definision(&g_max_bomb, "爆弾の数");
+    input_len(&g_col, "マップの縦の長さ");
+    input_len(&g_row, "マップの横の長さ");
+    input_bomb(&g_max_bomb, "爆弾の数");
 
     init_game(&map, &vmap);
-
-    display_state(map);
 
     while (is_clear(map) != TRUE && game_flag == TRUE){
         show_map(vmap);
@@ -91,14 +89,27 @@ int main(void)
     return (0);
 }
 
-// TODO: 爆弾はマップの中に入る個数しか入力できないようにするべきでは？
-void input_definision(int *num, char *str)
+void input_len(int *num, char *str)
 {
     while (1){
         printf("%sの数を設定して下さい:", str);
         scanf("%d", num);
 
         if (0 <= *num && *num < 128){
+            break;
+        }
+
+        puts("範囲外の整数が入力されました");
+    }
+}
+
+void input_bomb(int *num, char *str)
+{
+    while (1){
+        printf("%sの数を設定して下さい:", str);
+        scanf("%d", num);
+
+        if (0 <= *num && *num < g_col * g_row){
             break;
         }
 
