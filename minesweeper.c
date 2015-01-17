@@ -283,7 +283,7 @@ void open_around(int **map, char **vmap, int x, int y)
     int flag = FALSE;
     static int visited[1000];
 
-    if (visited[y * g_row + x] == TRUE){
+    if (visited[y * g_row + x] == TRUE || vmap[y][x] == VISUAL_FLAG){
         return;
     }
 
