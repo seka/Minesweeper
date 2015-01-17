@@ -15,6 +15,7 @@
 #define TRUE      (1)
 #define FALSE     (0)
 
+/* ユーザによる設定値 */
 int g_col;
 int g_row;
 int g_max_bomb;
@@ -375,7 +376,6 @@ void switch_flag(char **vmap, int x, int y)
     vmap[y][x] = VISUAL_UNOPEN;
 }
 
-/* デバッグ用関数 */
 void display_state(int **map)
 {
     printf("%3c", ' ');
