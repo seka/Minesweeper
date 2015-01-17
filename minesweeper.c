@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <ctype.h>
 
 #define VISUAL_UNOPEN ('?')
 #define VISUAL_BOMB   ('x')
@@ -15,7 +14,6 @@
 #define TRUE      (1)
 #define FALSE     (0)
 
-/* ユーザによる設定値 */
 int g_col;
 int g_row;
 int g_max_bomb;
@@ -158,10 +156,11 @@ void end_game(int ***map, char ***vmap)
 {
     int i, j;
 
-    for (i = g_col - 1; 0 <= i; i--){
-        for (j = g_row - 1; 0 <= j; j--){
-            if (is_bomb(*map, i, j) == TRUE){
-                *vmap[i][j] = VISUAL_BOMB;
+    puts("解答 -------------------------------");
+    for (i = 0; i < g_col; i++){
+        for (j = 0; j < g_row; j++){
+            if (is_bomb(*map, j, i) == TRUE){
+                (*vmap)[i][j] = VISUAL_BOMB;
             }
         }
     }
