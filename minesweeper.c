@@ -19,44 +19,46 @@ int g_col;
 int g_row;
 int g_max_bomb;
 
-void end_game           (int ***map, char ***map_p);
+void adapt_around       (int **map, int x, int y, void (*func)(int **map, int x, int y));
+int  check_cell         (int **map, char **vmap, int x, int y);
+void end_game           (int ***map, char ***vmap);
 void increment_around   (int **map, int x, int y);
-void init_board         (char **map_p);
-void init_game          (int ***map, char ***map_p);
+void init_vmap          (char **vmap);
+void init_game          (int ***map, char ***vmap);
 void input_definision   (int *num, char *str);
 int  is_bomb            (int **map, int x, int y);
 int  is_clear           (int **map);
 int  is_limit           (int limit, int n);
-int  open_cell          (int **map, char **map_p, unsigned int x, unsigned int y);
-void open_around        (int **map, char **map_p, int x, int y);
+void open_around        (int **map, char **vmap, int x, int y);
 void set_bomb           (int **map);
 void show_map           (char **map);
-void switch_flag        (char **map_p, unsigned int x, unsigned int y);
+void switch_flag        (char **vmap, int x, int y);
 
 // デバッグ用関数
-void display_state     (int **map);
+void display_state(int **map);
 
 int main(void)
 {
-    int **map;
-    char **map_p;
+    char **vmap;    // ユーザに表示するマップ
+    int **map;      // マップの実体
 
     char c1, c2, c3;
-    int selected_x;
-    int selected_y;
+    int selected_x, selected_y;
 
-    int flag = TRUE;
+    int game_flag = TRUE;
 
     input_definision(&g_col, "マップの縦の長さ");
     input_definision(&g_row, "マップの横の長さ");
     input_definision(&g_max_bomb, "爆弾の数");
 
-    init_game(&map, &map_p);
+    init_game(&map, &vmap);
 
-    while (is_clear(map) != TRUE && flag == TRUE){
-        show_map(map_p);
+    display_state(map);
 
-        printf("Type x(space)y and press Enter:");
+    while (is_clear(map) != TRUE && game_flag == TRUE){
+        show_map(vmap);
+
+        printf("x(space)y を入力して下さい:");
         scanf(" %c %c", &c2, &c1);
 
         selected_x = c2 - 'a';
@@ -67,22 +69,24 @@ int main(void)
             continue;
         }
 
-        printf("(f)lag or (o)pen and press to Enter:");
+        printf("(f)lag か (o)pen を選択して下さい:");
         scanf(" %c", &c3);
 
-        if (c3 == 'f'){
-            switch_flag(map_p, selected_x, selected_y);
-        }
-        else if (c3 == 'o'){
-            flag = open_cell(map, map_p, selected_x, selected_y);
-        }
-        else {
-            puts("f と o 以外の数値が入力されました");
+        switch (c3){
+          case 'f':
+            switch_flag(vmap, selected_x, selected_y);
+            break;
+          case 'o':
+            game_flag = check_cell(map, vmap, selected_x, selected_y);
+            break;
+          default:
+            puts("f と o 以外の文字が入力されました");
+            break;
         }
     }
 
-    show_map(map_p);
-    end_game(&map, &map_p);
+    show_map(vmap);
+    end_game(&map, &vmap);
 
     return (0);
 }
@@ -90,87 +94,104 @@ int main(void)
 // TODO: 爆弾はマップの中に入る個数しか入力できないようにするべきでは？
 void input_definision(int *num, char *str)
 {
-    int x = 0;
+    while (1){
+        printf("%sの数を設定して下さい:", str);
+        scanf("%d", num);
 
-    while (x == 0){
-        printf("%sの設定:", str);
-        scanf(" %d", &x);
-        *num = x;
-
-        if (x <= 0 && x > 16384){
-            puts("範囲外の整数が入力されました");
-            x = 0;
+        if (0 <= *num && *num < 128){
+            break;
         }
+
+        puts("範囲外の整数が入力されました");
     }
 }
 
-void init_game(int ***map, char ***map_p)
+void init_game(int ***map, char ***vmap)
 {
     *map   = (int **) calloc(g_col, sizeof(char *));
-    *map_p = (char **)calloc(g_col, sizeof(int *));
+    *vmap = (char **)calloc(g_col, sizeof(int *));
 
-    if (*map == NULL || *map_p == NULL){
+    if (*map == NULL || *vmap == NULL){
         puts("メモリの確保に失敗しました");
         exit(1);
     }
 
     for (int i = g_col - 1; 0 <= i; i--){
         *(*map + i)   = (int  *)calloc(g_row, sizeof(int));
-        *(*map_p + i) = (char *)calloc(g_row + 1, sizeof(char));
+        *(*vmap + i) = (char *)calloc(g_row + 1, sizeof(char));
 
-        if (*map == NULL || *map_p == NULL){
+        if (*map == NULL || *vmap == NULL){
             puts("メモリの確保に失敗しました");
             exit(1);
         }
     }
 
-    init_board(*map_p);
+    init_vmap(*vmap);
     set_bomb(*map);
 }
 
-void init_board(char **map)
+void init_vmap(char **vmap)
 {
-    for (int i = 0; i < g_col; i++){
-        for (int j = 0; j < g_row; j++){
-            map[i][j] = VISUAL_UNOPEN;
+    int i, j;
+
+    for (i = g_col - 1; 0 <= i; i--){
+        for (j = g_row - 1; 0 <= j; j--){
+            vmap[i][j] = VISUAL_UNOPEN;
         }
-        map[i][g_row] = '\0';
+        vmap[i][g_row] = '\0';
     }
 }
 
-void end_game(int ***map, char ***map_p)
+void end_game(int ***map, char ***vmap)
 {
-    for (int i = 0; i < g_col; i++){
+    int i, j;
+
+    for (i = g_col - 1; 0 <= i; i--){
+        for (j = g_row - 1; 0 <= j; j--){
+            if (is_bomb(*map, i, j) == TRUE){
+                *vmap[i][j] = VISUAL_BOMB;
+            }
+        }
+    }
+
+    show_map(*vmap);
+
+    for (i = g_col - 1; 0 <= i; i--){
         free(*(*map + i));
-        free(*(*map_p + i));
+        free(*(*vmap + i));
     }
 
     free(*map);
-    free(*map_p);
+    free(*vmap);
 }
 
 void set_bomb(int **map)
 {
     int count;
     int rand_num;
+    int x, y;
 
     srand((unsigned int)time(NULL));
 
     count = 0;
     while (count < g_max_bomb){
         rand_num = rand() % (g_col * g_row);
+        x = rand_num % g_row;
+        y = rand_num / g_row;
 
-        if (map[rand_num / g_row][rand_num % g_row] != BOMB){
-            map[rand_num / g_row][rand_num % g_row] = BOMB;
-            increment_around(map, rand_num % g_row, rand_num / g_row);
-            count++;
+        if (map[y][x] == BOMB){
+            continue;
         }
+
+        map[y][x] = BOMB;
+        increment_around(map, x, y);
+        count++;
     }
 }
 
 void increment_around(int **map, int x, int y)
 {
-    // Cellの上側の重み付け
+    // 爆弾を設置したCellの上側のCellへ重み付け
     if (is_limit(g_col, y - 1) == TRUE){
         if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y - 1) == FALSE){
             map[y - 1][x - 1]++;
@@ -183,7 +204,7 @@ void increment_around(int **map, int x, int y)
         }
     }
 
-    // Cellの左右の重み付け
+    // 爆弾を設置したCellの左右のCellへ重み付け
     if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y) == FALSE){
         map[y][x - 1]++;
     }
@@ -191,7 +212,7 @@ void increment_around(int **map, int x, int y)
         map[y][x + 1]++;
     }
 
-    // Cellの下側の重み付け
+    // 爆弾を設置したCellの下側のCellへ重み付け
     if (is_limit(g_col, y + 1) == TRUE){
         if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y + 1) == FALSE){
             map[y + 1][x - 1]++;
@@ -236,29 +257,28 @@ int is_clear(int **map)
     }
 
     puts("ゲームクリア！");
+
     return (TRUE);
 }
 
-int open_cell(int **map, char **map_p, unsigned int x, unsigned int y)
+int check_cell(int **map, char **vmap, int x, int y)
 {
-    if (map_p[y][x] == VISUAL_FLAG){
+    if (vmap[y][x] == VISUAL_FLAG || map[y][x] == OPENED){
         return (TRUE);
     }
 
     if (is_bomb(map, x, y) == TRUE){
         puts("爆弾です!");
-        map_p[y][x] = VISUAL_BOMB;
+        vmap[y][x] = VISUAL_BOMB;
         return (FALSE);
     }
 
-    if (map[y][x] != OPENED){
-        open_around(map, map_p, x, y);
-    }
+    open_around(map, vmap, x, y);
 
     return (TRUE);
 }
 
-void open_around(int **map, char **map_p, int x, int y)
+void open_around(int **map, char **vmap, int x, int y)
 {
     int flag = FALSE;
     static int visited[1000];
@@ -272,7 +292,7 @@ void open_around(int **map, char **map_p, int x, int y)
     }
 
     visited[y * g_row + x] = TRUE;
-    map_p[y][x] = map[y][x] + '0';
+    vmap[y][x] = map[y][x] + '0';
     map[y][x] = OPENED;
 
     if (flag == TRUE){
@@ -281,35 +301,35 @@ void open_around(int **map, char **map_p, int x, int y)
 
     // Cellの上側の探索
     if (is_limit(g_col, y - 1) == TRUE){
-        if (is_limit(g_row, x - 1) == TRUE && map[y - 1][x - 1] != BOMB){
-            open_around(map, map_p, x - 1, y - 1);
+        if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y - 1) == FALSE){
+            open_around(map, vmap, x - 1, y - 1);
         }
-        if (is_bomb(map, x, y - 1) != BOMB){
-            open_around(map, map_p, x, y - 1);
+        if (is_bomb(map, x, y - 1) == FALSE){
+            open_around(map, vmap, x, y - 1);
         }
-        if (is_limit(g_row, x + 1) == TRUE && map[y - 1][x + 1] != BOMB){
-            open_around(map, map_p, x + 1, y - 1);
+        if (is_limit(g_row, x + 1) == TRUE && is_bomb(map, x + 1, y - 1) == FALSE){
+            open_around(map, vmap, x + 1, y - 1);
         }
     }
 
     // Cellの左右の探索
-    if (is_limit(g_row, x - 1) == TRUE && map[y][x - 1] != BOMB){
-        open_around(map, map_p, x - 1, y);
+    if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y) == FALSE){
+        open_around(map, vmap, x - 1, y);
     }
-    if (is_limit(g_row, x + 1) == TRUE && map[y][x + 1] != BOMB){
-        open_around(map, map_p, x + 1, y);
+    if (is_limit(g_row, x + 1) == TRUE && is_bomb(map, x + 1, y) == FALSE){
+        open_around(map, vmap, x + 1, y);
     }
 
     // Cellの下側の探索
     if (is_limit(g_col, y + 1) == TRUE){
-        if (is_limit(g_row, x - 1) == TRUE && map[y + 1][x - 1] != BOMB){
-            open_around(map, map_p, x - 1, y + 1);
+        if (is_limit(g_row, x - 1) == TRUE && is_bomb(map, x - 1, y + 1) == FALSE){
+            open_around(map, vmap, x - 1, y + 1);
         }
-        if (map[y + 1][x] != BOMB){
-            open_around(map, map_p, x, y + 1);
+        if (is_bomb(map, x, y + 1) == FALSE){
+            open_around(map, vmap, x, y + 1);
         }
-        if (is_limit(g_row, x + 1) == TRUE && map[y + 1][x + 1] != BOMB){
-            open_around(map, map_p, x + 1, y + 1);
+        if (is_limit(g_row, x + 1) == TRUE && is_bomb(map, x + 1, y + 1) == FALSE){
+            open_around(map, vmap, x + 1, y + 1);
         }
     }
 }
@@ -323,25 +343,25 @@ void show_map(char **map)
     for (i = 0; i < g_row; i++){
       printf("%5c", 'a' + i);
     }
-    puts("");
+    putchar('\n');
 
     for (i = 0; i < g_col; i++){
         printf("%4c", i + '0');
         for (j = 0; j < g_row; j++){
             printf(" %4c", map[i][j]);
         }
-        puts("");
+        putchar('\n');
     }
 }
 
-void switch_flag(char **map_p, unsigned int x, unsigned int y)
+void switch_flag(char **vmap, int x, int y)
 {
-    if (map_p[y][x] == VISUAL_UNOPEN && map_p[y][x] != VISUAL_FLAG){
-        map_p[y][x] = VISUAL_FLAG;
+    if (vmap[y][x] == VISUAL_UNOPEN && vmap[y][x] != VISUAL_FLAG){
+        vmap[y][x] = VISUAL_FLAG;
         return;
     }
 
-    map_p[y][x] = VISUAL_UNOPEN;
+    vmap[y][x] = VISUAL_UNOPEN;
 }
 
 /* デバッグ用関数 */
@@ -352,13 +372,13 @@ void display_state(int **map)
     for (int i = 0; i < g_row; i++){
       printf("%5c", 'a' + i);
     }
-    puts("");
+    putchar('\n');
 
     for (int i = 0; i < g_col; i++){
         printf("%4c", i + '0');
         for (int j = 0; j < g_row; j++){
             printf("%4d ", map[i][j]);
         }
-        puts("");
+        putchar('\n');
     }
 }
