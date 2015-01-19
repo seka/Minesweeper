@@ -34,7 +34,7 @@ int  is_bomb            (int **map, int x, int y);
 int  is_clear           (int **map);
 int  is_limit           (int limit, int n);
 void open_around        (int **map, char **vmap, int x, int y);
-void set_bomb           (int **map);
+void set_bomb           (int **map, int selected_x, int selected_y);
 void show_map           (char **map);
 void switch_flag        (char **vmap, int x, int y);
 
@@ -54,6 +54,10 @@ int main(void)
     input_definition(&g_max_bomb, "爆弾", check_bomb_size);
 
     init_game(&map, &vmap);
+    show_map(vmap);
+    input_point(&selected_x, &selected_y);
+    set_bomb(map, selected_x, selected_y);
+    open_around(map, vmap, selected_x, selected_y);
 
     game_flag = TRUE;
     while (is_clear(map) != TRUE && game_flag == TRUE){
@@ -168,7 +172,6 @@ void init_game(int ***map, char ***vmap)
     }
 
     init_vmap(*vmap);
-    set_bomb(*map);
 }
 
 void init_vmap(char **vmap)
@@ -207,7 +210,7 @@ void end_game(int ***map, char ***vmap)
     free(*vmap);
 }
 
-void set_bomb(int **map)
+void set_bomb(int **map, int selected_x, int selected_y)
 {
     int count;
     int rand_num;
@@ -221,7 +224,7 @@ void set_bomb(int **map)
         x = rand_num % g_row;
         y = rand_num / g_row;
 
-        if (map[y][x] == BOMB){
+        if (map[y][x] == BOMB || (x == selected_x && y == selected_y)){
             continue;
         }
 
@@ -323,7 +326,11 @@ int check_cell(int **map, char **vmap, int x, int y)
 void open_around(int **map, char **vmap, int x, int y)
 {
     int flag = FALSE;
-    static int visited[1000]; // TODO:この変数を動的に確保する
+    static int *visited = (void *)NULL;
+
+    if (visited == (void *)NULL){
+        visited = (int *)calloc(g_col * g_row, sizeof(int));
+    }
 
     if (visited[y * g_row + x] == TRUE || vmap[y][x] == VISUAL_FLAG){
         return;
