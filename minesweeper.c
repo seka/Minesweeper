@@ -35,7 +35,7 @@ int  is_clear           (int **map);
 int  is_limit           (int limit, int n);
 void open_around        (int **map, char **vmap, int x, int y);
 void set_bomb           (int **map, int selected_x, int selected_y);
-void show_map           (char **map);
+void show_map           (char **map, int clear_flag);
 void switch_flag        (char **vmap, int x, int y);
 
 // デバッグ用関数
@@ -54,14 +54,14 @@ int main(void)
     input_definition(&g_max_bomb, "爆弾", check_bomb_size);
 
     init_game(&map, &vmap);
-    show_map(vmap);
+    show_map(vmap, FALSE);
     input_point(&selected_x, &selected_y);
     set_bomb(map, selected_x, selected_y);
     open_around(map, vmap, selected_x, selected_y);
 
     game_flag = TRUE;
     while (is_clear(map) != TRUE && game_flag == TRUE){
-        show_map(vmap);
+        show_map(vmap, FALSE);
         input_point(&selected_x, &selected_y);
 
         if (input_action() == 'f'){
@@ -72,7 +72,6 @@ int main(void)
         }
     }
 
-    show_map(vmap);
     end_game(&map, &vmap);
 
     return (0);
@@ -199,7 +198,7 @@ void end_game(int ***map, char ***vmap)
         }
     }
 
-    show_map(*vmap);
+    show_map(*vmap, TRUE);
 
     for (i = g_col - 1; 0 <= i; i--){
         free(*(*map + i));
@@ -383,13 +382,16 @@ void open_around(int **map, char **vmap, int x, int y)
     }
 }
 
-void show_map(char **map)
+void show_map(char **map, int clear_flag)
 {
     int i, j;
     static char *colors[] = {"\x1b[37m", "\e[36m", "\e[34m", "\e[32m"
       , "\e[33m", "\e[31m", "\e[31m", "\e[31m", "\e[31m"};
 
-    printf("\e[2J\e[1;1H");
+    if (clear_flag != TRUE){
+        printf("\e[2J\e[1;1H");
+    }
+
     printf("%4c", ' ');
 
     for (i = 0; i < g_row; i++){
