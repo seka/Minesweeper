@@ -18,13 +18,18 @@ int g_col;
 int g_row;
 int g_max_bomb;
 
+int  check_action       (char c);
 int  check_cell         (int **map, char **vmap, int x, int y);
+int  check_map_size     (int num);
+int  check_bomb_size    (int num);
+int  check_point        (int x, int y);
 void end_game           (int ***map, char ***vmap);
 void increment_around   (int **map, int x, int y);
+char input_action       (void);
 void init_vmap          (char **vmap);
 void init_game          (int ***map, char ***vmap);
-void input_bomb         (int *num, char *str);
-void input_len          (int *num, char *str);
+void input_definition   (int *num, char *str, int (*check_func)(int num));
+void input_point        (int *x, int *y);
 int  is_bomb            (int **map, int x, int y);
 int  is_clear           (int **map);
 int  is_limit           (int limit, int n);
@@ -41,44 +46,25 @@ int main(void)
     char **vmap;    // ユーザに表示するマップ
     int **map;      // マップの実体
 
-    char c1, c2, c3;
     int selected_x, selected_y;
+    int game_flag;
 
-    int game_flag = TRUE;
-
-    input_len(&g_col, "マップの縦の長さ");
-    input_len(&g_row, "マップの横の長さ");
-    input_bomb(&g_max_bomb, "爆弾の数");
+    input_definition(&g_col, "マップの縦の長さ", check_map_size);
+    input_definition(&g_row, "マップの横の長さ", check_map_size);
+    input_definition(&g_max_bomb, "爆弾", check_bomb_size);
 
     init_game(&map, &vmap);
 
+    game_flag = TRUE;
     while (is_clear(map) != TRUE && game_flag == TRUE){
         show_map(vmap);
+        input_point(&selected_x, &selected_y);
 
-        printf("x(space)y を入力して下さい:");
-        scanf(" %c %c", &c2, &c1);
-
-        selected_x = c2 - 'a';
-        selected_y = c1 - '0';
-
-        if (is_limit(g_row, selected_x) != TRUE || is_limit(g_col, selected_y) != TRUE){
-            puts("範囲外の数値が入力されました");
-            continue;
-        }
-
-        printf("(f)lag か (o)pen を選択して下さい:");
-        scanf(" %c", &c3);
-
-        switch (c3){
-          case 'f':
+        if (input_action() == 'f'){
             switch_flag(vmap, selected_x, selected_y);
-            break;
-          case 'o':
+        }
+        else {
             game_flag = check_cell(map, vmap, selected_x, selected_y);
-            break;
-          default:
-            puts("f と o 以外の文字が入力されました");
-            break;
         }
     }
 
@@ -88,32 +74,77 @@ int main(void)
     return (0);
 }
 
-void input_len(int *num, char *str)
+void input_definition(int *num, char *str, int (*check_func)(int num))
 {
-    while (1){
+    do {
         printf("%sの数を設定して下さい:", str);
-        scanf("%d", num);
-
-        if (0 <= *num && *num < 128){
-            break;
-        }
-
-        puts("範囲外の整数が入力されました");
-    }
+        fflush(stdin);
+        scanf(" %d", num);
+    }while (check_func(*num) != TRUE);
 }
 
-void input_bomb(int *num, char *str)
+int check_map_size(int num)
 {
-    while (1){
-        printf("%sの数を設定して下さい:", str);
-        scanf("%d", num);
-
-        if (0 <= *num && *num < g_col * g_row){
-            break;
-        }
-
-        puts("範囲外の整数が入力されました");
+    if (0 < num && num < 128){
+        return (TRUE);
     }
+    puts("範囲外の数値が入力されました");
+    return (FALSE);
+}
+
+int check_bomb_size(int num)
+{
+    if (0 < num && num < g_col * g_row){
+        return (TRUE);
+    }
+    puts("マップの数を超える数値が入力されました");
+    return (FALSE);
+}
+
+void input_point(int *x, int *y)
+{
+    char c1, c2;
+
+    do {
+        printf("xy を入力して下さい:");
+        scanf(" %c %c", &c1, &c2);
+        fflush(stdin);
+
+        *x = c1 - 'a';
+        *y = c2 - '0';
+    }while (check_point(*x, *y) != TRUE);
+}
+
+int check_point(int x, int y)
+{
+    if (is_limit(g_row, x) == TRUE && is_limit(g_col, y) == TRUE){
+        return (TRUE);
+    }
+
+    puts("マップの数を超える数値が入力されました");
+    return (FALSE);
+}
+
+char input_action(void)
+{
+    char c;
+
+    do {
+        printf("(f)lag か (o)pen を選択して下さい:");
+        scanf(" %c", &c);
+        fflush(stdin);
+    } while (check_action(c) != TRUE);
+
+    return (c);
+}
+
+int check_action(char c)
+{
+    if (c == 'o' || c == 'f'){
+        return (TRUE);
+    }
+    puts("oかf以外の文字が入力されました");
+    return (FALSE);
 }
 
 void init_game(int ***map, char ***vmap)
@@ -292,7 +323,7 @@ int check_cell(int **map, char **vmap, int x, int y)
 void open_around(int **map, char **vmap, int x, int y)
 {
     int flag = FALSE;
-    static int visited[1000];
+    static int visited[1000]; // TODO:この変数を動的に確保する
 
     if (visited[y * g_row + x] == TRUE || vmap[y][x] == VISUAL_FLAG){
         return;
@@ -348,7 +379,10 @@ void open_around(int **map, char **vmap, int x, int y)
 void show_map(char **map)
 {
     int i, j;
+    static char *colors[] = {"\x1b[37m", "\e[36m", "\e[34m", "\e[32m"
+      , "\e[33m", "\e[31m", "\e[31m", "\e[31m", "\e[31m"};
 
+    printf("\e[2J\e[1;1H");
     printf("%4c", ' ');
 
     for (i = 0; i < g_row; i++){
@@ -358,9 +392,27 @@ void show_map(char **map)
 
     for (i = 0; i < g_col; i++){
         printf("%4c", i + '0');
+
         for (j = 0; j < g_row; j++){
-            printf(" %4c", map[i][j]);
+          printf("\x1b[m");
+          printf("%4c", ' ');
+
+          if (map[i][j] == VISUAL_FLAG){
+              printf("\x1b[47m");
+          }
+          else if (map[i][j] == VISUAL_UNOPEN){
+              printf("\x1b[37m");
+          }
+          else if (map[i][j] == VISUAL_BOMB){
+              printf("\x1b[41m");
+          }
+          else {
+              printf("%s", colors[map[i][j] - '0']);
+          }
+          printf("%c", map[i][j]);
         }
+
+        printf("\x1b[m");
         putchar('\n');
     }
 }
@@ -371,7 +423,6 @@ void switch_flag(char **vmap, int x, int y)
         vmap[y][x] = VISUAL_FLAG;
         return;
     }
-
     vmap[y][x] = VISUAL_UNOPEN;
 }
 
