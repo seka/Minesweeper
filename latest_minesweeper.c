@@ -179,7 +179,7 @@ void show_map(int game_flag)
       , "\e[33m", "\e[31m", "\e[31m", "\e[31m", "\e[31m"};
 
     if (game_flag != TRUE){
-       // printf("\e[2J\e[1;1H");
+      printf("\e[2J\e[1;1H");
     }
 
     printf("\n%5c", ' ');
@@ -196,21 +196,17 @@ void show_map(int game_flag)
 
             switch (g_map[i][j].state){
               case FLAG:
-                printf("\x1b[47m");
-                printf("%c", VISUAL_FLAG);
+                printf("\x1b[47m%c", VISUAL_FLAG);
                 break;
               case UNOPEN:
-                printf("\x1b[37m");
-                printf("%c", VISUAL_UNOPEN);
+                printf("\x1b[37m%c", VISUAL_UNOPEN);
                 break;
               case OPENED:
                 if (g_map[i][j].bomb == TRUE){
-                  printf("\x1b[41m");
-                  printf("%c", VISUAL_BOMB);
+                  printf("\x1b[41m%c", VISUAL_BOMB);
                   break;
                 }
-                printf("%s", colors[g_map[i][j].count]);
-                printf("%d", g_map[i][j].count);
+                printf("%s%d", colors[g_map[i][j].count], g_map[i][j].count);
                 break;
             }
         }
